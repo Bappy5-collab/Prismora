@@ -77,20 +77,39 @@ function NavContent({ onNavigate }: { onNavigate?: () => void }) {
                 onNavigate?.();
               }}
               sx={{
+                position: "relative",
                 borderRadius: 2,
-                mb: 0.5,
+                mb: 0.25,
+                py: 0.85,
+                color: "text.secondary",
+                "& .MuiListItemIcon-root": { color: "text.secondary" },
+                "&:hover": { bgcolor: "action.hover", color: "text.primary" },
+                "&:hover .MuiListItemIcon-root": { color: "text.primary" },
                 "&.Mui-selected": {
                   bgcolor: "rgba(37, 99, 235, 0.08)",
                   color: "primary.main",
                   "& .MuiListItemIcon-root": { color: "primary.main" },
+                  "& .MuiListItemText-primary": { fontWeight: 600 },
                   "&:hover": { bgcolor: "rgba(37, 99, 235, 0.12)" },
+                  // Left accent rail — the Linear/Vercel active marker.
+                  "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    left: 0,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    height: 18,
+                    width: 3,
+                    borderRadius: 999,
+                    backgroundColor: "primary.main",
+                  },
                 },
               }}
             >
-              <ListItemIcon sx={{ minWidth: 38 }}>
+              <ListItemIcon sx={{ minWidth: 36 }}>
                 <Icon fontSize="small" />
               </ListItemIcon>
-              <ListItemText primaryTypographyProps={{ fontSize: 14, fontWeight: 600 }}>
+              <ListItemText primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }}>
                 {label}
               </ListItemText>
             </ListItemButton>

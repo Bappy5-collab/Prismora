@@ -1,12 +1,16 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
+import { LandingPage } from "@/components/landing/LandingPage";
 
-// Root: send authenticated users to the dashboard, everyone else to login.
+// Root: authenticated users go straight to the dashboard; everyone else sees
+// the marketing landing page (which links to sign in / sign up).
 export default async function Home() {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  redirect(user ? "/dashboard" : "/login");
+  if (user) redirect("/dashboard");
+
+  return <LandingPage />;
 }

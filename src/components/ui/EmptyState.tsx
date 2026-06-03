@@ -17,19 +17,23 @@ export function EmptyState({
     <Box
       sx={{
         textAlign: "center",
-        py: 8,
-        px: 2,
+        py: { xs: 6, sm: 8 },
+        px: 3,
         border: "1px dashed",
         borderColor: "divider",
-        borderRadius: 2,
+        borderRadius: 2.5,
         bgcolor: "background.paper",
       }}
     >
-      <Typography variant="h4" sx={{ mb: 0.5 }}>
+      <Typography variant="h4" sx={{ mb: 0.75 }}>
         {title}
       </Typography>
       {description && (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: action ? 2 : 0 }}>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ mb: action ? 2.5 : 0, maxWidth: 420, mx: "auto" }}
+        >
           {description}
         </Typography>
       )}

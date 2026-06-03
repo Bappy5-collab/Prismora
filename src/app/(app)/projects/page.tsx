@@ -90,7 +90,13 @@ export default function ProjectsPage() {
         <Grid container spacing={2}>
           {projects.map((p) => (
             <Grid size={{ xs: 12, sm: 6, md: 4 }} key={p.id}>
-              <Card sx={{ height: "100%", position: "relative" }}>
+              <Card
+                sx={{
+                  height: "100%",
+                  position: "relative",
+                  "&:hover": { borderColor: "grey.300" },
+                }}
+              >
                 <IconButton
                   size="small"
                   onClick={(e) => setMenu({ anchor: e.currentTarget, project: p })}
