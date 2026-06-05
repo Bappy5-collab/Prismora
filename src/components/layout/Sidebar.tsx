@@ -19,8 +19,11 @@ import AssistantIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import ActivityIcon from "@mui/icons-material/HistoryOutlined";
 import AuditIcon from "@mui/icons-material/ShieldOutlined";
 import SettingsIcon from "@mui/icons-material/SettingsOutlined";
+import LogoutIcon from "@mui/icons-material/LogoutOutlined";
 import ListSubheader from "@mui/material/ListSubheader";
+import Divider from "@mui/material/Divider";
 import { BrandMark } from "@/components/BrandMark";
+import { signOut } from "@/hooks/useAuth";
 
 export const SIDEBAR_WIDTH = 240;
 
@@ -41,6 +44,13 @@ const NAV = [
 function NavContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
+
+  async function handleSignOut() {
+    onNavigate?.();
+    await signOut();
+    router.replace("/login");
+    router.refresh();
+  }
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -116,6 +126,34 @@ function NavContent({ onNavigate }: { onNavigate?: () => void }) {
           );
         })}
       </List>
+
+      {/* Logout pinned to the bottom of the sidebar. */}
+      <Box sx={{ mt: "auto" }}>
+        <Divider />
+        <List sx={{ px: 1.5, py: 1 }}>
+          <ListItemButton
+            onClick={handleSignOut}
+            sx={{
+              borderRadius: 2,
+              py: 0.85,
+              color: "text.secondary",
+              "& .MuiListItemIcon-root": { color: "text.secondary" },
+              "&:hover": {
+                bgcolor: "rgba(220, 38, 38, 0.08)",
+                color: "error.main",
+                "& .MuiListItemIcon-root": { color: "error.main" },
+              },
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 36 }}>
+              <LogoutIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }}>
+              Log out
+            </ListItemText>
+          </ListItemButton>
+        </List>
+      </Box>
     </Box>
   );
 }

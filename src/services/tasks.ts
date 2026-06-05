@@ -12,6 +12,16 @@ import type {
 
 const TASK_SELECT = "*, assignee:profiles!tasks_assignee_id_fkey(id, full_name, email)";
 
+// Best-effort branded "task assigned" email. The server route holds the SMTP
+// credentials and looks up the assignee from the taskId; failures are ignored.
+function sendTaskAssignedEmail(taskId: string) {
+  return fetch("/api/email/task-assigned", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ taskId }),
+  }).catch(() => {});
+}
+
 export async function fetchTasks(projectId: string): Promise<TaskWithAssignee[]> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase
@@ -79,7 +89,7 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
     .single();
   if (error) throw error;
 
-  // Fire an in-app notification when assigning to someone other than self.
+  // Fire an in-app notification + branded email when assigning to someone else.
   if (input.assigneeId && input.assigneeId !== user.id) {
     await createNotification({
       workspaceId: input.workspaceId,
@@ -87,6 +97,7 @@ export async function createTask(input: CreateTaskInput): Promise<Task> {
       title: "Task assigned",
       body: `You were assigned "${data.title}".`,
     });
+    void sendTaskAssignedEmail(data.id);
   }
 
   await logActivity({
@@ -155,6 +166,24 @@ export async function updateTask(taskId: string, patch: UpdateTaskInput): Promis
         title: "Task completed",
         body: `"${data.title}" was marked done.`,
       });
+    }
+  }
+
+  // Re-assignment → notify + email the new assignee (when it isn't the actor).
+  const assignmentChanged =
+    "assignee_id" in patch && data.assignee_id && data.assignee_id !== prev?.assignee_id;
+  if (assignmentChanged && data.assignee_id) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (data.assignee_id !== user?.id) {
+      await createNotification({
+        workspaceId: data.workspace_id,
+        userId: data.assignee_id,
+        title: "Task assigned",
+        body: `You were assigned "${data.title}".`,
+      });
+      void sendTaskAssignedEmail(data.id);
     }
   }
 

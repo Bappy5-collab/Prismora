@@ -30,6 +30,26 @@ export async function updateMyProfile(
   if (error) throw error;
 }
 
+/**
+ * Mark onboarding complete and fire the branded welcome email (best-effort).
+ * Called once at the end of the onboarding wizard.
+ */
+export async function completeOnboarding(): Promise<void> {
+  const supabase = getSupabaseBrowserClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated.");
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ onboarded: true })
+    .eq("id", user.id);
+  if (error) throw error;
+
+  void fetch("/api/email/welcome", { method: "POST" }).catch(() => {});
+}
+
 /** Change the signed-in user's password via Supabase Auth. */
 export async function changePassword(newPassword: string): Promise<void> {
   const supabase = getSupabaseBrowserClient();

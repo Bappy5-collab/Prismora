@@ -94,6 +94,13 @@ export async function inviteMember(
   });
   if (error) throw error;
 
+  // Best-effort branded invite email (server route holds the SMTP creds).
+  void fetch("/api/email/invite", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ workspaceId, email: normalized }),
+  }).catch(() => {});
+
   // "Member joined" notification when an existing user was added immediately.
   if (profile) {
     await notifyWorkspaceMembers({

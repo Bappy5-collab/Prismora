@@ -3,6 +3,25 @@ import { logActivity } from "./activity";
 import { createNotification } from "./notifications";
 import type { TaskCommentWithAuthor } from "@/lib/database.types";
 
+// Comment counts for a set of tasks, in a single query. Used by the Kanban
+// board to show a comment badge per card. Returns a { [taskId]: count } map.
+export async function fetchCommentCounts(
+  taskIds: string[]
+): Promise<Record<string, number>> {
+  if (taskIds.length === 0) return {};
+  const supabase = getSupabaseBrowserClient();
+  const { data, error } = await supabase
+    .from("task_comments")
+    .select("task_id")
+    .in("task_id", taskIds);
+  if (error) throw error;
+  const counts: Record<string, number> = {};
+  for (const row of (data ?? []) as { task_id: string }[]) {
+    counts[row.task_id] = (counts[row.task_id] ?? 0) + 1;
+  }
+  return counts;
+}
+
 export async function fetchComments(taskId: string): Promise<TaskCommentWithAuthor[]> {
   const supabase = getSupabaseBrowserClient();
   const { data, error } = await supabase

@@ -2,8 +2,11 @@
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import { PrismoraMark } from "./PrismoraMark";
 
-// Simple, flat wordmark. Square chip in primary blue + "Prismora" in dark gray.
+// Brand lockup: a rounded blue chip holding the custom prism glyph, plus the
+// "Prismora" wordmark. Pass `compact` to render the chip alone (collapsed nav,
+// avatars). This is the single source of truth for the logo across the app.
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -11,21 +14,20 @@ export function BrandMark({ compact = false }: { compact?: boolean }) {
         sx={{
           width: 28,
           height: 28,
-          borderRadius: 1.5,
+          borderRadius: 1.75,
           bgcolor: "primary.main",
           color: "#fff",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontWeight: 700,
-          fontSize: 16,
           flexShrink: 0,
+          boxShadow: "0 1px 2px rgba(37,99,235,0.35)",
         }}
       >
-        P
+        <PrismoraMark size={17} />
       </Box>
       {!compact && (
-        <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: -0.2 }}>
+        <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: -0.3 }}>
           Prismora
         </Typography>
       )}

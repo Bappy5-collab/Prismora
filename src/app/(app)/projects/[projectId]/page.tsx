@@ -11,6 +11,8 @@ import Typography from "@mui/material/Typography";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import AddIcon from "@mui/icons-material/Add";
+import ViewKanbanIcon from "@mui/icons-material/ViewKanbanOutlined";
+import TableRowsIcon from "@mui/icons-material/TableRowsOutlined";
 import { useProject } from "@/hooks/useProjects";
 import { useCreateTask, useDeleteTask, useTasks, useUpdateTask } from "@/hooks/useTasks";
 import { useRealtimeTasks } from "@/hooks/useRealtime";
@@ -19,6 +21,7 @@ import { useWorkspaceStore } from "@/store/workspaceStore";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TaskTable } from "@/components/tasks/TaskTable";
+import { TaskBoard } from "@/components/tasks/TaskBoard";
 import { TaskDialog, type TaskFormValues } from "@/components/tasks/TaskDialog";
 import { ProjectStatusChip } from "@/components/projects/ProjectStatusChip";
 import type { TaskStatus, TaskWithAssignee } from "@/lib/database.types";
@@ -48,6 +51,7 @@ export default function ProjectDetailPage({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<TaskWithAssignee | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("all");
+  const [view, setView] = useState<"board" | "table">("board");
 
   const filtered = useMemo(() => {
     const list = tasks ?? [];
@@ -101,6 +105,17 @@ export default function ProjectDetailPage({
     }
   }
 
+  // Drag-and-drop on the board: move a card to a new status column. The update
+  // service enforces the dependency gate (can't be "done" while blocked), so
+  // surface that message if the move is rejected.
+  async function handleMove(taskId: string, status: TaskStatus) {
+    try {
+      await updateTask.mutateAsync({ taskId, patch: { status } });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Could not move the task.");
+    }
+  }
+
   const newButton = (
     <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
       New task
@@ -136,22 +151,53 @@ export default function ProjectDetailPage({
         />
       )}
 
-      <Stack direction="row" sx={{ mb: 2 }}>
+      <Stack
+        direction="row"
+        sx={{ mb: 2 }}
+        justifyContent="space-between"
+        alignItems="center"
+        spacing={1}
+      >
         <ToggleButtonGroup
           size="small"
           exclusive
           value={filter}
           onChange={(_, v) => v && setFilter(v)}
+          sx={{ visibility: view === "table" ? "visible" : "hidden" }}
         >
           <ToggleButton value="all">All</ToggleButton>
           <ToggleButton value="todo">Todo</ToggleButton>
           <ToggleButton value="in_progress">In Progress</ToggleButton>
           <ToggleButton value="done">Done</ToggleButton>
         </ToggleButtonGroup>
+
+        <ToggleButtonGroup
+          size="small"
+          exclusive
+          value={view}
+          onChange={(_, v) => v && setView(v)}
+        >
+          <ToggleButton value="board">
+            <ViewKanbanIcon fontSize="small" sx={{ mr: 0.5 }} />
+            Board
+          </ToggleButton>
+          <ToggleButton value="table">
+            <TableRowsIcon fontSize="small" sx={{ mr: 0.5 }} />
+            Table
+          </ToggleButton>
+        </ToggleButtonGroup>
       </Stack>
 
       {tasksLoading ? (
         <Skeleton variant="rounded" height={200} />
+      ) : (tasks?.length ?? 0) > 0 && view === "board" ? (
+        <TaskBoard
+          tasks={tasks ?? []}
+          projectId={projectId}
+          onMove={handleMove}
+          onEdit={openEdit}
+          onDelete={handleDelete}
+        />
       ) : filtered.length > 0 ? (
         <TaskTable tasks={filtered} onEdit={openEdit} onDelete={handleDelete} />
       ) : (

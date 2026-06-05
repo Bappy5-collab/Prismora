@@ -12,5 +12,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   if (!user) redirect("/login");
 
+  // First-run gate: route users who haven't finished onboarding to the wizard.
+  // Existing users were marked onboarded by migration 0009, so they pass through.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("onboarded")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (profile && profile.onboarded === false) redirect("/onboarding");
+
   return <AppShell>{children}</AppShell>;
 }

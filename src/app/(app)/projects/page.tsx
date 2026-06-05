@@ -60,7 +60,7 @@ export default function ProjectsPage() {
   }
 
   const newButton = canCreate ? (
-    <Stack direction="row" spacing={1}>
+    <Stack direction="row" spacing={1} justifyContent="center">
       <Button variant="outlined" onClick={() => setTemplatesOpen(true)}>
         From template
       </Button>
@@ -75,8 +75,13 @@ export default function ProjectsPage() {
       <PageHeader
         title="Projects"
         subtitle="Projects group related tasks inside this workspace."
-        action={newButton}
       />
+
+      {newButton && projects && projects.length > 0 && (
+        <Box sx={{ display: "flex", justifyContent: "center", mb: 3 }}>
+          {newButton}
+        </Box>
+      )}
 
       {isLoading ? (
         <Grid container spacing={2}>

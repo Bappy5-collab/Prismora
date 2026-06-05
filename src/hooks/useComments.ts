@@ -5,12 +5,24 @@ import {
   addComment,
   deleteComment,
   fetchComments,
+  fetchCommentCounts,
   updateComment,
 } from "@/services/comments";
 
 export const commentKeys = {
   list: (taskId: string) => ["comments", taskId] as const,
+  counts: (projectId: string) => ["comments", "counts", projectId] as const,
 };
+
+// Comment counts for every task in a project, keyed by task id. The board
+// passes its visible task ids; the query refetches when that set changes.
+export function useCommentCounts(projectId: string, taskIds: string[]) {
+  return useQuery({
+    queryKey: [...commentKeys.counts(projectId), taskIds.length],
+    queryFn: () => fetchCommentCounts(taskIds),
+    enabled: !!projectId && taskIds.length > 0,
+  });
+}
 
 export function useComments(taskId: string | null) {
   return useQuery({
