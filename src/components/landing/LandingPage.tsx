@@ -141,29 +141,6 @@ function FeatureTile({ icon, title, body }: { icon: SvgIconComponent; title: str
   );
 }
 
-// Highlighter accent behind a headline keyword (painted under the text).
-function Highlight({ children }: { children: ReactNode }) {
-  return (
-    <Box component="span" sx={{ position: "relative", display: "inline-block", whiteSpace: "nowrap" }}>
-      <Box
-        aria-hidden
-        sx={{
-          position: "absolute",
-          left: -4,
-          right: -4,
-          bottom: "0.1em",
-          height: "0.34em",
-          bgcolor: "rgba(37, 99, 235, 0.18)",
-          borderRadius: 1,
-        }}
-      />
-      <Box component="span" sx={{ position: "relative", color: "primary.main" }}>
-        {children}
-      </Box>
-    </Box>
-  );
-}
-
 // "New / announcement" pill — links into the AI section.
 function AnnouncementPill() {
   return (
@@ -269,8 +246,12 @@ function HeroShowcase() {
 
   return (
     <Box sx={{ position: "relative", maxWidth: 980, mx: "auto" }}>
+      {/* Ambient floor glow behind the board */}
+      <Box aria-hidden sx={{ position: "absolute", inset: "8% -4% -12% -4%", borderRadius: "50%", background: "radial-gradient(ellipse at 50% 50%, rgba(37,99,235,0.18) 0%, rgba(37,99,235,0) 65%)", filter: "blur(12px)", pointerEvents: "none" }} />
       {/* Board */}
-      <Box sx={{ borderRadius: 4, border: "1px solid", borderColor: "divider", bgcolor: "background.paper", overflow: "hidden", boxShadow: "0 24px 64px rgba(16,24,40,0.14)" }}>
+      <Box sx={{ position: "relative", borderRadius: 4, border: "1px solid", borderColor: "divider", bgcolor: "background.paper", overflow: "hidden", boxShadow: "0 30px 80px rgba(16,24,40,0.18)" }}>
+        {/* diagonal light-sweep across the glass */}
+        <Box aria-hidden sx={{ position: "absolute", top: 0, left: 0, width: "40%", height: "100%", zIndex: 2, pointerEvents: "none", background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent)", animation: "prismora-sweep 6.5s ease-in-out infinite", animationDelay: "1.2s" }} />
         {/* board header */}
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: { xs: 2, md: 3 }, py: 2, borderBottom: "1px solid", borderColor: "divider" }}>
           <Stack direction="row" spacing={1.5} alignItems="center">
@@ -585,6 +566,23 @@ export function LandingPage() {
             "70%": { boxShadow: "0 0 0 6px rgba(37,99,235,0)" },
             "100%": { boxShadow: "0 0 0 0 rgba(37,99,235,0)" },
           },
+          // Slow-drifting aurora blobs behind the hero — depth without loud color.
+          "@keyframes prismora-aurora": {
+            "0%": { transform: "translate(0, 0) scale(1)" },
+            "33%": { transform: "translate(6%, -4%) scale(1.12)" },
+            "66%": { transform: "translate(-5%, 5%) scale(0.94)" },
+            "100%": { transform: "translate(0, 0) scale(1)" },
+          },
+          // Animated sheen sweeping across the gradient headline keyword.
+          "@keyframes prismora-shimmer": {
+            "0%": { backgroundPosition: "0% 50%" },
+            "100%": { backgroundPosition: "200% 50%" },
+          },
+          // Diagonal light-sweep across the hero showcase glass.
+          "@keyframes prismora-sweep": {
+            "0%": { transform: "translateX(-120%) skewX(-12deg)" },
+            "100%": { transform: "translateX(320%) skewX(-12deg)" },
+          },
           "@media (prefers-reduced-motion: reduce)": {
             "*": { animation: "none !important", transition: "none !important" },
           },
@@ -596,10 +594,14 @@ export function LandingPage() {
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <Box sx={{ position: "relative", overflow: "hidden", mt: { xs: -7, md: -9 }, pt: { xs: 7, md: 9 } }}>
+        {/* drifting aurora blobs — layered depth, on-brand blue tints */}
+        <Box aria-hidden sx={{ position: "absolute", top: -220, left: "50%", transform: "translateX(-50%)", width: 900, height: 620, pointerEvents: "none", filter: "blur(8px)" }}>
+          <Box sx={{ position: "absolute", top: 40, left: "8%", width: 460, height: 460, borderRadius: "50%", background: "radial-gradient(circle, rgba(37,99,235,0.22) 0%, rgba(37,99,235,0) 60%)", animation: "prismora-aurora 18s ease-in-out infinite" }} />
+          <Box sx={{ position: "absolute", top: 0, right: "6%", width: 420, height: 420, borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.18) 0%, rgba(99,102,241,0) 60%)", animation: "prismora-aurora 22s ease-in-out infinite reverse", animationDelay: "1.5s" }} />
+          <Box sx={{ position: "absolute", top: 120, left: "38%", width: 380, height: 380, borderRadius: "50%", background: "radial-gradient(circle, rgba(14,165,233,0.16) 0%, rgba(14,165,233,0) 62%)", animation: "prismora-aurora 26s ease-in-out infinite", animationDelay: "0.8s" }} />
+        </Box>
         {/* faint fading grid (slow drift) */}
-        <Box aria-hidden sx={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)", backgroundSize: "56px 56px", maskImage: "radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%)", WebkitMaskImage: "radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%)", opacity: 0.6, animation: "prismora-grid 24s linear infinite" }} />
-        {/* soft on-brand glow */}
-        <Box aria-hidden sx={{ position: "absolute", top: -160, left: "50%", transform: "translateX(-50%)", width: 760, height: 480, background: "radial-gradient(circle, rgba(37,99,235,0.14) 0%, rgba(37,99,235,0) 62%)", pointerEvents: "none" }} />
+        <Box aria-hidden sx={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)", backgroundSize: "56px 56px", maskImage: "radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%)", WebkitMaskImage: "radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%)", opacity: 0.55, animation: "prismora-grid 24s linear infinite" }} />
         {/* cursor-following spotlight */}
         <HeroGlow />
 
@@ -609,10 +611,26 @@ export function LandingPage() {
               <AnnouncementPill />
             </Reveal>
             <Reveal delay={60}>
-              <Typography variant="h1" sx={{ mt: 3, fontSize: { xs: "2.4rem", sm: "3rem", md: "3.85rem" }, lineHeight: 1.05, letterSpacing: "-0.035em" }}>
+              <Typography variant="h1" sx={{ mt: 3, fontSize: { xs: "2.5rem", sm: "3.1rem", md: "4.1rem" }, lineHeight: 1.04, letterSpacing: "-0.04em" }}>
                 Plan, track and ship work —{" "}
                 <Box component="span" sx={{ display: "inline-block" }}>
-                  with <Highlight>AI</Highlight> built in.
+                  with{" "}
+                  <Box
+                    component="span"
+                    sx={{
+                      backgroundImage:
+                        "linear-gradient(100deg, #2563eb 0%, #6366f1 35%, #0ea5e9 55%, #2563eb 100%)",
+                      backgroundSize: "200% auto",
+                      backgroundClip: "text",
+                      WebkitBackgroundClip: "text",
+                      color: "transparent",
+                      WebkitTextFillColor: "transparent",
+                      animation: "prismora-shimmer 5s linear infinite",
+                    }}
+                  >
+                    AI
+                  </Box>{" "}
+                  built in.
                 </Box>
               </Typography>
             </Reveal>
@@ -624,16 +642,58 @@ export function LandingPage() {
             </Reveal>
             <Reveal delay={180}>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} justifyContent="center" sx={{ mt: 4 }}>
-                <Button component={Link} href="/signup" variant="contained" size="large" endIcon={<ArrowForwardIcon />}>
+                <Button
+                  component={Link}
+                  href="/signup"
+                  variant="contained"
+                  size="large"
+                  endIcon={<ArrowForwardIcon />}
+                  sx={{
+                    borderRadius: 999,
+                    px: 3.5,
+                    boxShadow: "0 8px 24px rgba(37,99,235,0.35)",
+                    transition: "transform 200ms cubic-bezier(0.16,1,0.3,1), box-shadow 200ms ease",
+                    "&:hover": { transform: "translateY(-2px)", boxShadow: "0 14px 36px rgba(37,99,235,0.45)" },
+                    "& .MuiButton-endIcon": { transition: "transform 200ms ease" },
+                    "&:hover .MuiButton-endIcon": { transform: "translateX(4px)" },
+                  }}
+                >
                   Get started free
                 </Button>
-                <Button component={Link} href="/login" variant="outlined" size="large">
+                <Button
+                  component={Link}
+                  href="/login"
+                  variant="outlined"
+                  size="large"
+                  sx={{
+                    borderRadius: 999,
+                    px: 3.5,
+                    bgcolor: "rgba(255,255,255,0.6)",
+                    backdropFilter: "blur(8px)",
+                    transition: "transform 200ms cubic-bezier(0.16,1,0.3,1), border-color 200ms ease",
+                    "&:hover": { transform: "translateY(-2px)", borderColor: "grey.400" },
+                  }}
+                >
                   Sign in
                 </Button>
               </Stack>
-              <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 2 }}>
-                No credit card required · Free to start
-              </Typography>
+
+              {/* Social proof — avatar stack + rating */}
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems="center" justifyContent="center" sx={{ mt: 3.5 }}>
+                <Stack direction="row" alignItems="center" spacing={1.25}>
+                  <AvatarStack names={["Sara", "Mira", "Jon", "Alex"]} />
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                    Loved by fast-moving teams
+                  </Typography>
+                </Stack>
+                <Box sx={{ width: "1px", height: 16, bgcolor: "divider", display: { xs: "none", sm: "block" } }} />
+                <Stack direction="row" alignItems="center" spacing={0.75}>
+                  <Box sx={{ color: "#f59e0b", fontSize: 14, letterSpacing: "1px" }}>★★★★★</Box>
+                  <Typography variant="caption" color="text.secondary">
+                    No credit card required
+                  </Typography>
+                </Stack>
+              </Stack>
             </Reveal>
           </Box>
 
