@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { createSupabaseAdminClient } from "@/lib/supabaseServer";
+import { welcomeEmail, sendMail } from "@/lib/email";
 import {
   exchangeCodeForToken,
   fetchProfile,
@@ -49,7 +50,17 @@ export async function GET(
     const profile = await fetchProfile(provider, accessToken);
 
     const admin = createSupabaseAdminClient();
-    const userId = await findOrCreateUser(profile);
+    const { id: userId, created } = await findOrCreateUser(profile);
+
+    // Brand-new account → send the welcome email (OAuth users are auto-confirmed,
+    // so this is their account-created notification).
+    if (created) {
+      const { subject, html } = welcomeEmail({
+        name: profile.fullName || profile.email.split("@")[0],
+        appUrl: `${base}/dashboard`,
+      });
+      await sendMail({ to: profile.email, subject, html }).catch(() => {});
+    }
 
     // Mint a session: generate a one-time magic-link token for this user, then
     // verify it through a cookie-bound server client so the session is written
@@ -115,7 +126,7 @@ export async function GET(
  * confirmed email) if they don't exist yet. The `handle_new_user` trigger
  * populates the matching `profiles` row from `full_name`.
  */
-async function findOrCreateUser(profile: OAuthProfile): Promise<string> {
+async function findOrCreateUser(profile: OAuthProfile): Promise<{ id: string; created: boolean }> {
   const admin = createSupabaseAdminClient();
   const email = profile.email;
 
@@ -135,7 +146,7 @@ async function findOrCreateUser(profile: OAuthProfile): Promise<string> {
         .update({ avatar_url: profile.avatarUrl })
         .eq("id", created.user.id);
     }
-    return created.user.id;
+    return { id: created.user.id, created: true };
   }
 
   // The user already exists — look them up by email.
@@ -146,7 +157,7 @@ async function findOrCreateUser(profile: OAuthProfile): Promise<string> {
     });
     if (listError) throw listError;
     const found = list.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
-    if (found) return found.id;
+    if (found) return { id: found.id, created: false };
     if (list.users.length < 200) break;
   }
 

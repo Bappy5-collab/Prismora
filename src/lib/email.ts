@@ -18,7 +18,7 @@ const SECURE = process.env.SMTP_SECURE === "true" || PORT === 465;
 const FROM = process.env.EMAIL_FROM || (USER ? `Prismora <${USER}>` : "Prismora <no-reply@prismora.app>");
 
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:3000";
+  process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "") || "http://localhost:3000";
 
 export const isEmailConfigured = Boolean(HOST && USER && PASS);
 
@@ -190,6 +190,142 @@ export function welcomeEmail(input: {
       ctaLabel: "Open your dashboard",
       ctaUrl: input.appUrl,
       footnote: "Need help getting started? Just reply to this email.",
+    }),
+  };
+}
+
+// Sent when someone signs up with email + password, before their account is
+// active. The CTA link confirms their address and signs them in.
+//
+// This one gets a dedicated, premium layout (gradient hero + icon badge +
+// copy-paste fallback link) rather than the generic template.
+export function confirmEmail(input: {
+  name: string;
+  confirmUrl: string;
+}): { subject: string; html: string } {
+  const who = escapeHtml(input.name || "there");
+  const url = input.confirmUrl;
+  const urlAttr = url.replace(/&/g, "&amp;"); // valid in href
+  const urlText = escapeHtml(url);
+  const GRAD_FROM = "#4f46e5"; // indigo
+  const GRAD_TO = "#2563eb"; // blue
+
+  return {
+    subject: "Confirm your Prismora account ✨",
+    html: `<!doctype html>
+<html>
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+  <body style="margin:0;padding:0;background:${BG};">
+    <span style="display:none!important;opacity:0;color:transparent;height:0;width:0;overflow:hidden;">Confirm your email to activate your Prismora account.</span>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BG};padding:32px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+      <tr><td align="center">
+        <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="width:480px;max-width:100%;background:#ffffff;border:1px solid ${BORDER};border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(17,24,39,0.06);">
+
+          <!-- Gradient hero -->
+          <tr><td style="background:${GRAD_TO};background-image:linear-gradient(135deg,${GRAD_FROM} 0%,${GRAD_TO} 100%);padding:36px 32px 30px;text-align:center;">
+            <table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr>
+              <td style="width:28px;height:28px;background:rgba(255,255,255,0.18);border-radius:8px;text-align:center;vertical-align:middle;color:#ffffff;font-weight:700;font-size:15px;">P</td>
+              <td style="padding-left:10px;font-size:17px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">Prismora</td>
+            </tr></table>
+            <!-- Icon badge -->
+            <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin-top:22px;"><tr>
+              <td style="width:72px;height:72px;background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.35);border-radius:50%;text-align:center;vertical-align:middle;font-size:34px;line-height:72px;">✉️</td>
+            </tr></table>
+            <h1 style="margin:18px 0 4px;font-size:23px;line-height:1.3;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">Confirm your email</h1>
+            <p style="margin:0;font-size:14px;line-height:1.5;color:rgba(255,255,255,0.88);">One quick step to activate your account</p>
+          </td></tr>
+
+          <!-- Body -->
+          <tr><td style="padding:30px 32px 8px;">
+            <p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:${INK};">Hi ${who},</p>
+            <p style="margin:0 0 24px;font-size:15px;line-height:1.65;color:${MUTED};">Thanks for signing up for <strong style="color:${INK};">Prismora</strong>. Confirm this email address to activate your account and jump into your workspace.</p>
+
+            <!-- Button -->
+            <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto 22px;"><tr>
+              <td style="border-radius:10px;background:${GRAD_TO};background-image:linear-gradient(135deg,${GRAD_FROM} 0%,${GRAD_TO} 100%);box-shadow:0 4px 12px rgba(37,99,235,0.35);">
+                <a href="${urlAttr}" style="display:inline-block;padding:14px 36px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;letter-spacing:0.2px;">Confirm my account →</a>
+              </td>
+            </tr></table>
+
+            <p style="margin:0 0 8px;font-size:13px;line-height:1.6;color:${MUTED};text-align:center;">⏱️ This link expires in 24 hours.</p>
+          </td></tr>
+
+          <!-- Fallback link -->
+          <tr><td style="padding:8px 32px 4px;">
+            <div style="border-top:1px solid ${BORDER};padding-top:18px;">
+              <p style="margin:0 0 8px;font-size:12px;line-height:1.5;color:${MUTED};">Button not working? Copy and paste this link into your browser:</p>
+              <p style="margin:0;font-size:12px;line-height:1.5;word-break:break-all;"><a href="${urlAttr}" style="color:${GRAD_TO};text-decoration:none;">${urlText}</a></p>
+            </div>
+          </td></tr>
+
+          <!-- Footer -->
+          <tr><td style="padding:22px 32px 28px;">
+            <p style="margin:0;font-size:12px;line-height:1.6;color:${MUTED};">If you didn't create a Prismora account, you can safely ignore this email — no account will be activated.</p>
+          </td></tr>
+        </table>
+        <p style="margin:18px 0 0;font-size:12px;color:${MUTED};">© ${new Date().getFullYear()} Prismora · AI-powered project management</p>
+      </td></tr>
+    </table>
+  </body>
+</html>`,
+  };
+}
+
+// Sent once the user finishes the onboarding wizard.
+export function onboardingCompleteEmail(input: {
+  name: string;
+  appUrl: string;
+}): { subject: string; html: string } {
+  const who = escapeHtml(input.name || "there");
+  return {
+    subject: "You're all set on Prismora ✅",
+    html: layout({
+      preheader: "Your workspace is ready — here's what to do next.",
+      heading: `You're all set, ${who}!`,
+      bodyHtml: `Your workspace is ready to go. From here you can create projects, assign tasks, track time and collaborate with your team in real time — and let Prismora's AI break the busywork down for you.`,
+      ctaLabel: "Go to your dashboard",
+      ctaUrl: input.appUrl,
+      footnote: "Have a question? Just reply to this email and we'll help.",
+    }),
+  };
+}
+
+// Confirmation that a new workspace was created, sent to the owner.
+export function workspaceCreatedEmail(input: {
+  name: string;
+  workspaceName: string;
+  appUrl: string;
+}): { subject: string; html: string } {
+  const who = escapeHtml(input.name || "there");
+  const ws = escapeHtml(input.workspaceName);
+  return {
+    subject: `Workspace created: ${input.workspaceName}`,
+    html: layout({
+      preheader: `${input.workspaceName} is ready on Prismora.`,
+      heading: `Your workspace is ready`,
+      bodyHtml: `Hi ${who}, your new workspace <strong style="color:${INK};">${ws}</strong> has been created. Invite your team, create your first project and start shipping.`,
+      ctaLabel: "Open workspace",
+      ctaUrl: input.appUrl,
+      footnote: "You're receiving this because you created this workspace on Prismora.",
+    }),
+  };
+}
+
+// Security notification sent after a successful password change.
+export function passwordChangedEmail(input: {
+  name: string;
+  appUrl: string;
+}): { subject: string; html: string } {
+  const who = escapeHtml(input.name || "there");
+  return {
+    subject: "Your Prismora password was changed",
+    html: layout({
+      preheader: "Your Prismora password was just changed.",
+      heading: "Your password was changed",
+      bodyHtml: `Hi ${who}, this is a confirmation that the password for your Prismora account was just changed.<br><br>If this was you, no action is needed. If you did <strong style="color:${INK};">not</strong> make this change, please reset your password immediately and contact support.`,
+      ctaLabel: "Review account security",
+      ctaUrl: input.appUrl,
+      footnote: "For your security, we notify you whenever your password changes.",
     }),
   };
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient, createSupabaseAdminClient } from "@/lib/supabaseServer";
 import { slugify } from "@/lib/utils";
+import { workspaceCreatedEmail, sendMail, SITE_URL } from "@/lib/email";
 
 // POST /api/workspaces  { name: string }
 //
@@ -46,5 +47,26 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Best-effort confirmation email to the owner. Never block workspace creation.
+  try {
+    const { data: profile } = await admin
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", user.id)
+      .maybeSingle();
+    const to = profile?.email ?? user.email;
+    if (to) {
+      const { subject, html } = workspaceCreatedEmail({
+        name: profile?.full_name || to.split("@")[0],
+        workspaceName: data.name,
+        appUrl: `${SITE_URL}/dashboard`,
+      });
+      await sendMail({ to, subject, html });
+    }
+  } catch {
+    /* ignore — the workspace was created successfully */
+  }
+
   return NextResponse.json(data, { status: 201 });
 }

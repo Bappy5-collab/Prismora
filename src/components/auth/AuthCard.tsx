@@ -58,20 +58,24 @@ export function AuthCard({ mode }: { mode: Mode }) {
 
     try {
       if (isSignup) {
-        const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: { data: { full_name: fullName.trim() } },
+        // Custom signup: creates the account and emails our branded confirmation
+        // link. The user activates + signs in by clicking it (/api/auth/confirm).
+        const res = await fetch("/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: fullName.trim(),
+            email: email.trim(),
+            password,
+          }),
         });
-        if (error) throw error;
-        // If email confirmation is disabled we get a session immediately.
-        if (data.session) {
-          await claimInvites();
-          router.replace("/dashboard");
-          router.refresh();
-        } else {
-          setInfo("Check your email to confirm your account, then sign in.");
-        }
+        const json = await res.json();
+        if (!res.ok) throw new Error(json?.error ?? "Could not create your account.");
+        setInfo(
+          json.emailSent === false
+            ? json.message ?? "Account created. Please contact the administrator to confirm it."
+            : "Check your email to confirm your account, then you'll be signed in."
+        );
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: email.trim(),

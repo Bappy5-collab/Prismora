@@ -47,7 +47,7 @@ export async function completeOnboarding(): Promise<void> {
     .eq("id", user.id);
   if (error) throw error;
 
-  void fetch("/api/email/welcome", { method: "POST" }).catch(() => {});
+  void fetch("/api/email/onboarding-complete", { method: "POST" }).catch(() => {});
 }
 
 /** Change the signed-in user's password via Supabase Auth. */
@@ -55,4 +55,7 @@ export async function changePassword(newPassword: string): Promise<void> {
   const supabase = getSupabaseBrowserClient();
   const { error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) throw error;
+
+  // Best-effort security notification email.
+  void fetch("/api/email/password-changed", { method: "POST" }).catch(() => {});
 }
