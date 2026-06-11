@@ -20,6 +20,11 @@ const FROM = process.env.EMAIL_FROM || (USER ? `Prismora <${USER}>` : "Prismora 
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "") || "http://localhost:3000";
 
+// Hosted logo for email headers. Email clients (Gmail/Outlook) can't render the
+// app's inline SVG glyph or data-URIs, so we serve a baked PNG from /public.
+// Must be an absolute URL — built from the canonical SITE_URL.
+export const LOGO_URL = `${SITE_URL}/prismora-logo.png`;
+
 export const isEmailConfigured = Boolean(HOST && USER && PASS);
 
 let transporter: nodemailer.Transporter | null = null;
@@ -103,8 +108,8 @@ function layout(opts: {
         <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="width:480px;max-width:100%;background:#ffffff;border:1px solid ${BORDER};border-radius:12px;overflow:hidden;">
           <tr><td style="padding:28px 32px 0;">
             <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-              <td style="width:30px;height:30px;background:${BLUE};border-radius:8px;text-align:center;vertical-align:middle;color:#ffffff;font-weight:700;font-size:15px;">P</td>
-              <td style="padding-left:10px;font-size:17px;font-weight:700;color:${INK};letter-spacing:-0.3px;">Prismora</td>
+              <td style="vertical-align:middle;"><img src="${LOGO_URL}" width="30" height="30" alt="Prismora" style="display:block;border:0;border-radius:8px;" /></td>
+              <td style="padding-left:10px;font-size:17px;font-weight:700;color:${INK};letter-spacing:-0.3px;vertical-align:middle;">Prismora</td>
             </tr></table>
           </td></tr>
           <tr><td style="padding:24px 32px 8px;">
@@ -224,8 +229,8 @@ export function confirmEmail(input: {
           <!-- Gradient hero -->
           <tr><td style="background:${GRAD_TO};background-image:linear-gradient(135deg,${GRAD_FROM} 0%,${GRAD_TO} 100%);padding:36px 32px 30px;text-align:center;">
             <table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr>
-              <td style="width:28px;height:28px;background:rgba(255,255,255,0.18);border-radius:8px;text-align:center;vertical-align:middle;color:#ffffff;font-weight:700;font-size:15px;">P</td>
-              <td style="padding-left:10px;font-size:17px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;">Prismora</td>
+              <td style="vertical-align:middle;"><img src="${LOGO_URL}" width="28" height="28" alt="Prismora" style="display:block;border:0;border-radius:8px;" /></td>
+              <td style="padding-left:10px;font-size:17px;font-weight:700;color:#ffffff;letter-spacing:-0.3px;vertical-align:middle;">Prismora</td>
             </tr></table>
             <!-- Icon badge -->
             <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin-top:22px;"><tr>
