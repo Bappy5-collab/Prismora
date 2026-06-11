@@ -26,7 +26,8 @@ export function AuthCard({ mode }: { mode: Mode }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  // Surface any error handed back by the OAuth callback route (?error=...).
+  const [error, setError] = useState<string | null>(searchParams.get("error"));
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -40,14 +41,12 @@ export function AuthCard({ mode }: { mode: Mode }) {
     }
   }
 
-  async function handleOAuth(provider: "google" | "github") {
-    setError(null);
-    const supabase = getSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
-    if (error) setError(error.message);
+  // Kick off the custom server-side OAuth flow (reads client id/secret from the
+  // app's .env). The /api/oauth/:provider route redirects to the provider and
+  // back to /api/oauth/:provider/callback, which establishes the session.
+  function handleOAuth(provider: "google" | "github") {
+    const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+    window.location.href = `/api/auth/signin/${provider}?redirectTo=${encodeURIComponent(redirectTo)}`;
   }
 
   async function handleSubmit(e: React.FormEvent) {
